@@ -65,11 +65,30 @@ export function evidenceOptions(description: string): string[] {
   return options.length ? options : [description.slice(0, 260)];
 }
 const genericEvidence = /^(?:приветствую|здравствуйте|меня зовут|мы\s*[—–-]|с уважением|обращаясь ко мне|именно таким)|(?:свяжитесь|связь со мной|по телефону|заключаем договор|интересен любой публике)/i;
-const concreteEvidence = /сценари|юмор|импровизац|интерактив|танц|репертуар|вокал|музык|песн|съ[её]мк|цвет|букет|оформлен|зал|площадк|банкет|свет|фото|видео|декор|язык|формат|бизнес|речей|состав|саксофон|труб[аы]|квартет/i;
+// Conservative, catalogue-specific signals of an identifiable service or method.
+// Mere mentions of music, atmosphere, quality or an event are not evidence.
+// Unknown wording deliberately falls back to an explicit information gap.
+const concreteEvidence = [
+  /\d+\s*(?:[–—-]\s*\d+\s*)?(?:человек|гост|вокалист|музыкант|инструмент|банкетн|час|штук)/i,
+  /опыт[^.!?\n]{0,45}\d+\s*лет|\d+[ -]летн[а-яё]*\s+опыт|\d+\s+(?:реализованн[а-яё]*\s+)?съ[её]мок|снял[а-яё]*\s+более\s+\d+\s+мероприяти/i,
+  /саксофон|квартет|перкусси|клавиш|барабан|гитар|скрипк|духов[а-яё]*\s+(?:брасс|инструмент)/i,
+  /(?:репертуар|исполня[а-яё]*|песн[а-яё]*)[^.!?\n]*(?:казахск|ретро|джаз|рок|классик|кавер|[89]0-х|2000-х)/i,
+  /(?:казахском|русском|английском)\s+(?:и\s+\S+\s+)?язык|язык[а-яё]*[^.!?\n]*(?:русск|казахск|английск)/i,
+  /каз\/рус\s+язык|музыкальн[а-яё]*\s+дуэт/i,
+  /без\s+(?:долгих\s+речей|шумных\s+конкурсов|шаблон[а-яё]*|пошл[а-яё]*)/i,
+  /(?:интеллигентн|интеллектуальн|тонк)[а-яё]*\s+юмор|культурн[а-яё]*\s+импровизац|адресн[а-яё]*\s+конкурс/i,
+  /(?:сезонн|привозн)[а-яё]*\s+цвет|букет\s+невест|оформлен[а-яё]*\s+стола|цветов[а-яё]*\s+палитр/i,
+  /фотозон|фотобудк|фото[/-]видеозон|фотомагнит|карточк[а-яё]*\s+рассадк|welcome-бокс|неонов[а-яё]*\s+вывеск|монтаж|металлокаркас/i,
+  /(?:мгновенн[а-яё]*\s+печат|печат[а-яё]*\s+(?:фото|снимк)|сенсорн[а-яё]*\s+экран|брендированн[а-яё]*\s+рамк)/i,
+  /панорамн[а-яё]*\s+(?:окн|вид)|парковк|кейтеринг|банкетн[а-яё]*\s+зал|(?:итальянск|казахск|средиземноморск)[а-яё]*\s+кухн/i,
+  /(?:репортажн|предметн|портретн|аэро)[а-яё]*\s*съ[её]мк|мультимедийн[а-яё]*\s+оборудован|светов[а-яё]*\s+и\s+пиксельн[а-яё]*\s+шоу/i,
+  /фотожурнализм|репортажн[а-яё]*\s+фотограф|портретн[а-яё]*\s+фотосесси|рекламн[а-яё]*\s+съ[её]мк|подсказыва[а-яё]*\s+позирован|формат\s+съ[её]мки:\s*full day/i,
+];
 const words = (value: string) => value.toLocaleLowerCase('ru').match(/[\p{L}\p{N}]+/gu) || [];
 const meaningfulWords = (value: string) => new Set(words(value).filter(word => word.length >= 4));
 export function evidenceIsUseful(value: string) {
-  return words(value).length >= 4 && !genericEvidence.test(value.trim());
+  return words(value).length >= 4 && !genericEvidence.test(value.trim())
+    && concreteEvidence.some(pattern => pattern.test(value));
 }
 export function evidenceIsDistinct(a: string, b: string) {
   const left = meaningfulWords(a), right = meaningfulWords(b);
@@ -82,17 +101,15 @@ export function fallbackEvidence(profiles: Profile[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (const profile of profiles) {
     const otherDescriptions = profiles.filter(p => p.id !== profile.id).map(p => meaningfulWords(p.description));
-    const options = evidenceOptions(profile.description).map((evidence, index) => {
+    const options = evidenceOptions(profile.description).filter(evidenceIsUseful).map((evidence, index) => {
       const uniqueWords = [...meaningfulWords(evidence)].filter(word => otherDescriptions.every(set => !set.has(word))).length;
       const score = Math.min(evidence.length, 180) + uniqueWords * 7
-        + (concreteEvidence.test(evidence) ? 80 : 0) + (/[0-9]/.test(evidence) ? 10 : 0);
+        + (/[0-9]/.test(evidence) ? 10 : 0);
       return { evidence, index, score };
     }).sort((a, b) => b.score - a.score || a.index - b.index);
-    const best = options.find(option => evidenceIsUseful(option.evidence) && selected.every(value => evidenceIsDistinct(value, option.evidence)))
-      || options.find(option => selected.every(value => evidenceIsDistinct(value, option.evidence)))
-      || options[0];
-    result[profile.id] = best.evidence;
-    selected.push(best.evidence);
+    const best = options.find(option => selected.every(value => evidenceIsDistinct(value, option.evidence)));
+    result[profile.id] = best?.evidence || '';
+    if (best) selected.push(best.evidence);
   }
   return result;
 }
@@ -110,7 +127,7 @@ export function validateExplanations(value: { cards: { id: string; evidence: str
   return value.cards;
 }
 export async function explain(profiles: Profile[], q: Query, signal: AbortSignal) {
-  const candidates = profiles.map(p => ({ id: p.id, excerpts: evidenceOptions(p.description).map((text, index) => ({ index, text })) }));
+  const candidates = profiles.map(p => ({ id: p.id, excerpts: evidenceOptions(p.description).filter(evidenceIsUseful).map((text, index) => ({ index, text })) }));
   const model = textModel();
   const response = await client().responses.parse({
     model, store: false,

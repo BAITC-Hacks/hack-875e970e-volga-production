@@ -1,0 +1,104 @@
+{
+  "base": "https://sobrano-production.up.railway.app",
+  "capturedAt": "2026-09-23T11:28:50.085Z",
+  "records": [
+    {
+      "name": "320px standard font",
+      "pass": false,
+      "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: 320\nReceived: 321"
+    },
+    {
+      "name": "empty budget blocks submit and correction works",
+      "pass": true
+    },
+    {
+      "name": "hostile wishes rendered as inert text",
+      "pass": true
+    },
+    {
+      "name": "normalization repeat",
+      "pass": true
+    },
+    {
+      "name": "http redirect and icon resource",
+      "pass": true,
+      "result": {
+        "httpStatus": 301,
+        "location": "https://sobrano-production.up.railway.app/",
+        "icon": "/icon.svg?4ae420b966bebb06",
+        "iconStatus": 200
+      }
+    },
+    {
+      "name": "keyboard-only main navigation",
+      "pass": true,
+      "result": [
+        {
+          "tag": "A",
+          "text": "Собрано — главная",
+          "id": ""
+        },
+        {
+          "tag": "A",
+          "text": "Как это работает ↗",
+          "id": ""
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "id": "mantine-kc390gera"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "15.10.2026",
+          "id": "mantine-w5fbfbwuq"
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "id": "mantine-yyqvzzab9"
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "id": "mantine-30dtracr8"
+        },
+        {
+          "tag": "INPUT",
+          "text": "",
+          "id": "mantine-76xsjwrkx"
+        },
+        {
+          "tag": "SUMMARY",
+          "text": "Язык и длительность необязательно",
+          "id": ""
+        },
+        {
+          "tag": "TEXTAREA",
+          "text": "",
+          "id": "mantine-2lcts2z00"
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Найти совпадения→",
+          "id": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Корпоратив↗Плотная категория",
+          "id": ""
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Другая дата↗Те же условия · 16 октября",
+          "id": ""
+        }
+      ]
+    },
+    {
+      "name": "webkit focus after animation",
+      "pass": false,
+      "error": "Error: expect(locator).toBeFocused() failed\n\nLocator:  getByRole('button', { name: 'Дата мероприятия' })\nExpected: focused\nReceived: inactive\nTimeout:  5000ms\n\nCall log:\n  - Expect \"toBeFocused\" getByRole('button', { name: 'Дата мероприятия' }) with timeout 5000ms\n  - waiting for getByRole('button', { name: 'Дата мероприятия' })\n    14 × locator resolved to <button required=\"\" type=\"button\" aria-expanded=\"false\" data-variant=\"default\" aria-haspopup=\"dialog\" id=\"mantine-8ecbn1z9t\" data-dates-input=\"true\" class=\"m_6fa5e2aa m_8fb7ebe7 mantine-Input-input mantine-DatePickerInput-input\">15.10.2026</button>\n       - unexpected value \"inactive\"\n"
+    }
+  ]
+}

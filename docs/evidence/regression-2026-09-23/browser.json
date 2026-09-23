@@ -1,0 +1,189 @@
+{
+  "capturedAt": "2026-09-23T11:28:50.818Z",
+  "base": "https://sobrano-production.up.railway.app",
+  "records": [
+    {
+      "browser": "chromium",
+      "name": "real selection mobile",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "calendar keyboard escape focus",
+      "result": {
+        "focusRestored": true
+      },
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "320px and 200 percent text",
+      "pass": false,
+      "error": "Error: {\"scroll\":640,\"width\":320}"
+    },
+    {
+      "browser": "chromium",
+      "name": "stale results exploration",
+      "result": {
+        "oldCards": 3,
+        "summary": "Алматы · Ведущий · 15.10.2026 · корпоратив · до 1 000 000 ₸"
+      },
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "submit changed budget then recover",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "loading prevents duplicates (client delay only)",
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "503 and malformed response recovery (client simulation)",
+      "result": {
+        "alert": "Unexpected token 'e', \"temporarily\"... is not valid JSON"
+      },
+      "pass": true
+    },
+    {
+      "browser": "chromium",
+      "name": "semantics and assets",
+      "result": {
+        "lang": "ru",
+        "h1": 1,
+        "unlabelled": [],
+        "navigation": {
+          "domContentLoaded": 1163.5,
+          "transferSize": 8305
+        },
+        "errors": []
+      },
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "real selection mobile",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "calendar keyboard escape focus",
+      "result": {
+        "focusRestored": true
+      },
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "320px and 200 percent text",
+      "pass": false,
+      "error": "Error: {\"scroll\":639,\"width\":320}"
+    },
+    {
+      "browser": "firefox",
+      "name": "stale results exploration",
+      "result": {
+        "oldCards": 3,
+        "summary": "Алматы · Ведущий · 15.10.2026 · корпоратив · до 1 000 000 ₸"
+      },
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "submit changed budget then recover",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "loading prevents duplicates (client delay only)",
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "503 and malformed response recovery (client simulation)",
+      "result": {
+        "alert": "JSON.parse: unexpected keyword at line 1 column 1 of the JSON data"
+      },
+      "pass": true
+    },
+    {
+      "browser": "firefox",
+      "name": "semantics and assets",
+      "result": {
+        "lang": "ru",
+        "h1": 1,
+        "unlabelled": [],
+        "navigation": {
+          "domContentLoaded": 1313,
+          "transferSize": 8305
+        },
+        "errors": []
+      },
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "real selection mobile",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "calendar keyboard escape focus",
+      "result": {
+        "focusRestored": false
+      },
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "320px and 200 percent text",
+      "pass": false,
+      "error": "Error: {\"scroll\":640,\"width\":320}"
+    },
+    {
+      "browser": "webkit",
+      "name": "stale results exploration",
+      "result": {
+        "oldCards": 3,
+        "summary": "Алматы · Ведущий · 15.10.2026 · корпоратив · до 1 000 000 ₸"
+      },
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "submit changed budget then recover",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "loading prevents duplicates (client delay only)",
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "503 and malformed response recovery (client simulation)",
+      "result": {
+        "alert": "The string did not match the expected pattern."
+      },
+      "pass": true
+    },
+    {
+      "browser": "webkit",
+      "name": "semantics and assets",
+      "result": {
+        "lang": "ru",
+        "h1": 1,
+        "unlabelled": [],
+        "navigation": {
+          "domContentLoaded": 1118,
+          "transferSize": 8350
+        },
+        "errors": []
+      },
+      "pass": true
+    }
+  ]
+}

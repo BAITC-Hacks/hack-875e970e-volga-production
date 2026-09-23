@@ -102,9 +102,15 @@ test('fallback evidence stays useful and distinct across the catalog calendar', 
       if (!selected.length) continue;
       checked++;
       const evidence = fallbackEvidence(selected);
-      for (const profile of selected) assert.ok(evidenceIsUseful(evidence[profile.id]), `${profile.id} ${date}`);
+      for (const profile of selected) {
+        const quote = evidence[profile.id];
+        if (quote) {
+          assert.ok(profile.description.includes(quote));
+          assert.ok(evidenceIsUseful(quote), `${profile.id} ${date}`);
+        }
+      }
       for (let i = 0; i < selected.length; i++) for (let j = i + 1; j < selected.length; j++) {
-        assert.ok(evidenceIsDistinct(evidence[selected[i].id], evidence[selected[j].id]), `${selected[i].id} ${selected[j].id} ${date}`);
+        assert.ok(!evidence[selected[i].id] || !evidence[selected[j].id] || evidenceIsDistinct(evidence[selected[i].id], evidence[selected[j].id]), `${selected[i].id} ${selected[j].id} ${date}`);
       }
     }
   }
@@ -117,8 +123,8 @@ test('semantic scores determine order, ties resolve by price and id; explanation
   assert.equal(result.cards[0].id, top.id); assert.equal(result.ranking, 'semantic');
 });
 test('unverified, duplicate or invented explanation evidence rejected', () => {
-  const p = profiles[0];
-  const valid = { id: p.id, evidence: p.description.slice(0, 80), aspect: 'service' as const };
+  const p = profiles.find(p => p.id === 'HK-90011')!;
+  const valid = { id: p.id, evidence: 'Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия.', aspect: 'service' as const };
   assert.equal(validateExplanations({ cards: [valid] }, [p]).length, 1);
   assert.throws(() => validateExplanations({ cards: [{ ...valid, evidence: 'Выдуманные сведения о подрядчике' }] }, [p]));
   assert.throws(() => validateExplanations({ cards: [valid, valid] }, [p]));
@@ -127,4 +133,87 @@ test('unverified, duplicate or invented explanation evidence rejected', () => {
 test('cosine similarity handles vector geometry and rejects corrupt vectors', () => {
   assert.equal(cosine([1, 0], [1, 0]), 1); assert.equal(cosine([1, 0], [0, 1]), 0);
   assert.throws(() => cosine([0], [0])); assert.throws(() => cosine([1], [1, 0]));
+});
+
+test('marketing alone is rejected even when it mentions music or atmosphere', () => {
+  const p = profiles.find(p => p.id === 'HK-25279')!;
+  const marketing = 'И да, мы действительно сверкаем — звуком, энергией и атмосферой, которую создаём на сцене.';
+  assert.ok(p.description.includes(marketing));
+  assert.throws(() => validateExplanations({ cards: [{ id: p.id, evidence: marketing, aspect: 'style' }] }, [p]));
+  for (const description of [marketing, 'Наша музыка создаёт незабываемую атмосферу на каждом событии.', 'Дарим яркие эмоции и превращаем праздник в волшебство.']) {
+    assert.equal(fallbackEvidence([{ ...p, description }])[p.id], '');
+  }
+});
+
+test('a sparse profile stays in AI-ranked results with an explicit information gap', async () => {
+  const bandQuery = { ...query, category: 'Лайв-бэнд', budget: 2000000 };
+  let sent: string[] = [];
+  const services: Services = {
+    scores: async selected => Object.fromEntries(selected.map(p => [p.id, p.id === 'HK-25279' ? 1 : 0])),
+    explanations: async selected => {
+      sent = selected.map(p => p.id);
+      return selected.map(p => ({ id: p.id, aspect: 'service' as const, evidence: fallbackEvidence(selected)[p.id] }));
+    },
+  };
+  const result = await computeResult(bandQuery, profiles, services);
+  assert.equal(result.cards.length, 3);
+  assert.equal(result.cards[0].id, 'HK-25279');
+  assert.equal(result.ranking, 'semantic');
+  assert.equal(result.explanationMode, 'ai');
+  assert.ok(!sent.includes('HK-25279'), 'Do not ask AI to invent a distinguishing feature');
+  assert.equal(result.cards[0].evidenceStatus, 'insufficient');
+  assert.equal(result.cards[0].evidence, '');
+  assert.match(result.cards[0].explanation, /не удалось выделить конкретную отличительную особенность/);
+  assert.doesNotMatch(result.cards[0].explanation, /сверкаем|энерги|атмосфер/);
+  assert.ok(result.cards.slice(1).every(c => c.evidenceStatus === 'specific' && c.evidence));
+  assert.deepEqual(await computeResult(bandQuery, profiles, services), result);
+});
+
+test('a single sparse profile is not hidden or mislabeled as an AI outage', async () => {
+  const p = profiles.find(p => p.id === 'HK-25279')!;
+  let calls = 0;
+  const result = await computeResult({ ...query, category: 'Лайв-бэнд', budget: 2000000 }, [p], {
+    scores: async () => ({ [p.id]: 1 }),
+    explanations: async () => { calls++; throw new Error('Should not call'); },
+  });
+  assert.equal(calls, 0);
+  assert.equal(result.status, 'matched');
+  assert.equal(result.cards.length, 1);
+  assert.equal(result.cards[0].id, p.id);
+  assert.equal(result.cards[0].evidenceStatus, 'insufficient');
+  assert.equal(result.explanationMode, 'facts');
+  assert.deepEqual(result.warnings, []);
+  assert.match(result.message, /показываем всех/);
+});
+
+test('unavailable AI cannot promote marketing to evidence', async () => {
+  const result = await computeResult({ ...query, category: 'Лайв-бэнд', budget: 2000000 }, profiles, offline);
+  const card = result.cards.find(c => c.id === 'HK-25279')!;
+  assert.equal(card.evidenceStatus, 'insufficient');
+  assert.equal(card.evidence, '');
+  assert.match(card.explanation, /уточните детали услуги/);
+  assert.doesNotMatch(card.explanation, /сверкаем/);
+});
+
+test('concrete facts survive while a promotional alternative is rejected', async () => {
+  const p = profiles.find(p => p.id === 'HK-90011')!;
+  const quote = 'Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия.';
+  const marketing = 'Наш зал создаёт незабываемую атмосферу для вашего праздника.';
+  const enriched = { ...p, description: marketing + ' ' + quote };
+  const result = await computeResult({ ...query, category: 'Отель', budget: 10000000 }, [enriched], {
+    scores: async () => ({ [p.id]: 1 }),
+    explanations: async () => [{ id: p.id, evidence: marketing, aspect: 'setting' }],
+  });
+  assert.equal(result.explanationMode, 'facts');
+  assert.equal(result.cards[0].evidence, quote);
+  assert.equal(result.cards[0].evidenceStatus, 'specific');
+  assert.ok(result.warnings.some(w => w.includes('не прошли проверку')));
+});
+
+test('identical concrete quotes do not become different reasons for two profiles', () => {
+  const quote = 'Панорамные окна, вместимость зала до 200 гостей, свой кейтеринг и парковка для гостей мероприятия.';
+  const template = profiles.find(p => p.id === 'HK-90011')!;
+  const pair = [{ ...template, id: 'test-a', description: quote }, { ...template, id: 'test-b', description: quote }];
+  assert.throws(() => validateExplanations({ cards: pair.map(p => ({ id: p.id, evidence: quote, aspect: 'setting' })) }, pair));
+  assert.deepEqual(fallbackEvidence(pair), { 'test-a': quote, 'test-b': '' });
 });
