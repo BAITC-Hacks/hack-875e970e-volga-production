@@ -10,7 +10,8 @@ export async function POST(request: Request) {
     try { input = JSON.parse(text); } catch { return NextResponse.json({ error: 'Некорректный JSON' }, { status: 400 }); }
     const parsed = querySchema().safeParse(input);
     if (!parsed.success) return NextResponse.json({ error: 'Проверьте параметры мероприятия', fields: parsed.error.flatten().fieldErrors }, { status: 400 });
-    return NextResponse.json(await recommend(parsed.data), { headers: { 'Cache-Control': 'no-store' } });
+    const result = await recommend(parsed.data);
+    return NextResponse.json(result, { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return NextResponse.json({ error: 'Не удалось выполнить подбор. Проверьте доступность каталога и хранилища кеша, затем повторите.' }, { status: 503 });
   }
