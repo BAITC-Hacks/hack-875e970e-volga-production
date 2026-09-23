@@ -1,0 +1,13 @@
+{
+  "checkedAt": "2026-09-23T12:48:38.402570+00:00",
+  "deploymentId": "e488e417-f122-4692-8f33-9b90510a0dd1",
+  "commit": "f727967",
+  "status": "SUCCESS",
+  "url": "https://sobrano-production.up.railway.app",
+  "health": {
+    "status": "ok",
+    "profiles": 66
+  },
+  "apiScenarios": 6,
+  "browserTestsPassed": 16
+}
