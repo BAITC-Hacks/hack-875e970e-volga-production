@@ -4,3 +4,22 @@
 @media(min-width:768px){.shell{width:min(100% - 4rem,80rem)}.header-note{display:block}.hero{grid-template-columns:1.5fr 1fr;align-items:center;padding:3.5rem 0}.hero-art{display:block}.hero-copy{font-size:1.05rem}.catalog-count{max-width:none}.workspace{grid-template-columns:minmax(19rem,.85fr) minmax(0,1.15fr);gap:1.5rem;padding-top:2rem}.form-panel{padding:1.5rem}.empty-state{padding-top:5rem}.empty-points{font-size:.65rem}.how-grid{grid-template-columns:repeat(3,1fr);gap:2rem}.demo-grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:1024px){.hero{grid-template-columns:1.6fr 1fr;gap:6rem;padding:4rem 0}.hero-art{max-width:23rem;min-height:22rem;justify-self:end;width:100%}.hero-flower{width:15rem;height:15rem;left:calc(50% - 7.5rem)}.workspace{grid-template-columns:23rem minmax(0,1fr);gap:3rem}.form-panel{padding:1.5rem}.card-heading{flex-direction:row;align-items:baseline;justify-content:space-between;gap:1rem}.contractor{padding:1.5rem}.empty-points{flex-direction:row;gap:1.25rem}.demo-grid{grid-template-columns:repeat(5,1fr)}.header{min-height:6.5rem}.hero-copy{max-width:33rem}.empty-state{padding-top:4rem}.empty-illustration{margin-bottom:2.5rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* Mantine controls use the same editorial palette and spacing as the surrounding page. */
+.form-control{min-width:0;margin-bottom:1rem}
+.form-panel .mantine-InputWrapper-label{display:block;min-width:0;margin:0 0 .45rem;font-size:.8rem;font-weight:600;line-height:1.45}
+.form-panel .mantine-InputWrapper-required{color:var(--orange)}
+.form-panel .mantine-InputWrapper-description{font-size:.71rem;line-height:1.5;color:var(--muted);margin:-.2rem 0 .55rem}
+.form-panel .mantine-InputWrapper-error{color:#9d3b2c;font-size:.75rem;line-height:1.5;margin-top:.4rem}
+.form-panel .mantine-Input-input{min-height:2.85rem;border:1px solid #ccd2c7;background:var(--paper);color:var(--ink);border-radius:.2rem;font-size:1rem}
+.form-panel .mantine-Input-input:focus{border-color:var(--green)}
+.form-panel .mantine-Input-input[data-error]{border-color:#9d3b2c}
+.form-panel .mantine-Input-input::placeholder{color:#778177}
+.form-panel .mantine-Textarea-input{line-height:1.6;min-height:6.4rem;resize:vertical}
+.mantine-Select-option{min-height:2.75rem}
+.form-panel .submit{min-height:3.3rem;background:var(--green);border:0;border-radius:.25rem;color:#fff;margin-top:1.25rem;padding:.9rem 1rem}
+.form-panel .submit:hover:not(:disabled){background:#193c2e}
+.form-panel .submit .mantine-Button-inner{width:100%;justify-content:space-between}
+.form-panel .submit .mantine-Button-section{font-size:1.35rem}
+.mantine-Modal-root button:hover:not(:disabled){transform:none}
+.mantine-Modal-root button:disabled{cursor:not-allowed;opacity:.5}
