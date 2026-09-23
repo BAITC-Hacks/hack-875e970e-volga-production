@@ -11,7 +11,7 @@
 - Docker Desktop / Docker Engine с Docker Compose v2+; Docker daemon запущен.
 - Свободный порт `3000`.
 - Доступ к интернету: при сборке — Docker Hub и npm; при новых AI-запросах — `api.openai.com`.
-- OpenAI API-ключ с балансом и доступом к `gpt-4.1-mini` и `text-embedding-3-small`.
+- OpenAI API-ключ с балансом и доступом к `gpt-6-sol` и `text-embedding-3-small`.
 - Исходный файл `hackathon dataset anonymized .csv` в корне репозитория. Он уже включён; 66 профилей, отдельная БД не нужна.
 
 1. Из корня проекта создайте конфигурацию, **если `.env` ещё нет**:
@@ -24,7 +24,7 @@
 
    ```dotenv
    OPENAI_API_KEY=ваш_ключ
-   OPENAI_MODEL=gpt-4.1-mini
+   OPENAI_MODEL=gpt-6-sol
    OPENAI_EMBEDDING_MODEL=text-embedding-3-small
    ```
 
@@ -54,7 +54,7 @@
 | Переменная | Назначение |
 | --- | --- |
 | `OPENAI_API_KEY` | Серверный ключ OpenAI; без него работает явно обозначенный резервный подбор |
-| `OPENAI_MODEL` | Модель выбора цитат, по умолчанию `gpt-4.1-mini` |
+| `OPENAI_MODEL` | Модель выбора цитат, по умолчанию `gpt-6-sol` |
 | `OPENAI_EMBEDDING_MODEL` | Модель смыслового поиска, по умолчанию `text-embedding-3-small` |
 | `CACHE_DIR` | Локально `.cache/sobrano`; Compose задаёт `/app/.cache/sobrano` |
 
