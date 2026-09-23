@@ -12,7 +12,11 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@mantine/core": "^9.6.2",
+    "@mantine/dates": "^9.6.2",
+    "@mantine/hooks": "^9.6.2",
     "csv-parse": "^7.0.2",
+    "dayjs": "^1.11.23",
     "next": "^16.3.6",
     "openai": "^7.23.0",
     "react": "^19.3.0",
