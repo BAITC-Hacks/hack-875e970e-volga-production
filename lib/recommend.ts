@@ -1,9 +1,9 @@
 import { getCatalog } from './catalog';
 import { hash, once, readCache, writeCache } from './cache';
 import { checks, dateLabel, filterProfiles, money, priceOrder } from './filter';
-import { embeddingModel, explain, semanticScores, textModel } from './ai';
+import { embeddingModel, explain, fallbackEvidence, semanticScores, textModel, validateExplanations } from './ai';
 import type { Profile, Query, Result } from './types';
-const ALGORITHM = 'sobrano-v3-indexed-evidence';
+const ALGORITHM = 'sobrano-v4-distinct-evidence';
 export type Services = {
   scores: typeof semanticScores; explanations: typeof explain;
 };
@@ -36,18 +36,18 @@ export async function computeResult(q: Query, profiles: Profile[], services: Ser
   let explanations: Awaited<ReturnType<typeof explain>> = [];
   try {
     if (signal.aborted) throw new Error('Deadline');
-    explanations = await services.explanations(selected, q, signal);
+    explanations = validateExplanations({ cards: await services.explanations(selected, q, signal) }, selected);
     result.explanationMode = 'ai';
   } catch {
     result.explanationMode = 'facts';
-    result.warnings.push('AI-объяснения недоступны: показываем проверенные условия и цитаты из анкет.');
+    result.warnings.push('AI-объяснения недоступны или не прошли проверку: показываем проверенные условия и разные цитаты из анкет.');
   }
+  const fallback = fallbackEvidence(selected);
   result.cards = selected.map(p => {
     const { busy_dates: _calendar, ...profile } = p;
     void _calendar;
     const explanation = explanations.find(e => e.id === p.id);
-    const excerpt = p.description.match(/^.{15,350}?[.!?](?:\s|$)/s)?.[0]?.trim() || p.description.slice(0, 300) + (p.description.length > 300 ? '…' : '');
-    const evidence = explanation?.evidence || excerpt;
+    const evidence = explanation?.evidence || fallback[p.id];
     const aspectLabels = { style: 'Стиль работы', experience: 'Релевантный опыт', service: 'Особенность услуги', setting: 'Особенность площадки', language: 'Языки работы' };
     const detail = explanation ? `${aspectLabels[explanation.aspect]} по анкете: «${evidence}»` : `В анкете: «${evidence}»`;
     const first = `По календарю свободен на ${dateLabel(q.date)}, берёт формат «${q.format}», цена от ${money(p.price_from_kzt)} при бюджете ${money(q.budget)}.`;

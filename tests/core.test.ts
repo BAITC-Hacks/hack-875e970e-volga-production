@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { getCatalog, querySchema, validDate } from '../lib/catalog';
 import { filterProfiles, priceOrder } from '../lib/filter';
 import { computeResult, type Services } from '../lib/recommend';
-import { cosine, validateExplanations } from '../lib/ai';
+import { cosine, evidenceIsDistinct, evidenceIsUseful, fallbackEvidence, validateExplanations } from '../lib/ai';
 import type { Query } from '../lib/types';
-const { profiles } = getCatalog();
+const { profiles, metadata } = getCatalog();
 const query: Query = { city: 'Алматы', date: '2026-10-15', category: 'Ведущий', format: 'корпоратив', budget: 1000000, wishes: '' };
 const fail = async () => { throw new Error('Simulated service unavailable'); };
 const offline: Services = { scores: fail, explanations: fail };
@@ -63,6 +63,52 @@ test('AI failure is explicit, deterministic, and uses profile evidence', async (
   const a = await computeResult(query, profiles, offline), b = await computeResult(query, profiles, offline);
   assert.deepEqual(a, b); assert.equal(a.ranking, 'price'); assert.equal(a.explanationMode, 'facts'); assert.equal(a.warnings.length, 2);
   assert.equal(new Set(a.cards.map(c => c.evidence)).size, a.cards.length);
+  assert.ok(a.cards.every(card => !/приветствую|связь со мной|по телефону|интересен любой публике/i.test(card.evidence)));
+});
+test('fallback gives similar live bands distinct, specific reasons', async () => {
+  const bandQuery = { ...query, category: 'Лайв-бэнд', budget: 2000000 };
+  const result = await computeResult(bandQuery, profiles, offline);
+  const again = await computeResult(bandQuery, profiles, offline);
+  assert.deepEqual(result, again);
+  assert.equal(result.explanationMode, 'facts');
+  const first = result.cards.find(card => card.id === 'HK-23752')!;
+  const second = result.cards.find(card => card.id === 'HK-83709')!;
+  assert.notEqual(first.explanation, second.explanation);
+  assert.match(first.evidence, /состав|вокалист|саксофон/i);
+  assert.match(second.evidence, /состав|вокалист|квартет/i);
+  for (const card of result.cards) {
+    assert.ok(profiles.find(p => p.id === card.id)!.description.includes(card.evidence));
+    assert.doesNotMatch(card.evidence, /^(?:приветствую|меня зовут|мы\s*[—–-])/i);
+  }
+});
+test('duplicate AI evidence is rejected and explained fallback is used', async () => {
+  const bandQuery = { ...query, category: 'Лайв-бэнд', budget: 2000000 };
+  const result = await computeResult(bandQuery, profiles, {
+    scores: fail,
+    explanations: async selected => selected.map(p => ({ id: p.id, aspect: 'service' as const,
+      evidence: p.id === 'HK-25279' ? p.description.slice(p.description.indexOf('И да')) : p.description.split('.')[0] + '.' })),
+  });
+  assert.equal(result.explanationMode, 'facts');
+  assert.ok(result.warnings.some(w => w.includes('не прошли проверку')));
+  assert.equal(new Set(result.cards.map(card => card.explanation)).size, result.cards.length);
+});
+test('fallback evidence stays useful and distinct across the catalog calendar', () => {
+  let checked = 0;
+  for (const city of metadata.cities) for (const category of metadata.categories) for (const format of metadata.formats) {
+    const base = profiles.filter(p => p.city === city && p.categories.includes(category) && p.event_formats.includes(format));
+    for (const budget of new Set(base.map(p => p.price_from_kzt))) for (let day = 0; day < 100; day++) {
+      const date = new Date(Date.UTC(2026, 8, 23 + day)).toISOString().slice(0, 10);
+      const selected = filterProfiles(profiles, { city, category, format, date, budget, wishes: '' }).eligible.sort(priceOrder).slice(0, 3);
+      if (!selected.length) continue;
+      checked++;
+      const evidence = fallbackEvidence(selected);
+      for (const profile of selected) assert.ok(evidenceIsUseful(evidence[profile.id]), `${profile.id} ${date}`);
+      for (let i = 0; i < selected.length; i++) for (let j = i + 1; j < selected.length; j++) {
+        assert.ok(evidenceIsDistinct(evidence[selected[i].id], evidence[selected[j].id]), `${selected[i].id} ${selected[j].id} ${date}`);
+      }
+    }
+  }
+  assert.ok(checked > 1000);
 });
 test('semantic scores determine order, ties resolve by price and id; explanation failure cannot reorder', async () => {
   const eligible = filterProfiles(profiles, query).eligible;

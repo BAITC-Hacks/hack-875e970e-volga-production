@@ -64,12 +64,48 @@ export function evidenceOptions(description: string): string[] {
   }
   return options.length ? options : [description.slice(0, 260)];
 }
+const genericEvidence = /^(?:приветствую|здравствуйте|меня зовут|мы\s*[—–-]|с уважением|обращаясь ко мне|именно таким)|(?:свяжитесь|связь со мной|по телефону|заключаем договор|интересен любой публике)/i;
+const concreteEvidence = /сценари|юмор|импровизац|интерактив|танц|репертуар|вокал|музык|песн|съ[её]мк|цвет|букет|оформлен|зал|площадк|банкет|свет|фото|видео|декор|язык|формат|бизнес|речей|состав|саксофон|труб[аы]|квартет/i;
+const words = (value: string) => value.toLocaleLowerCase('ru').match(/[\p{L}\p{N}]+/gu) || [];
+const meaningfulWords = (value: string) => new Set(words(value).filter(word => word.length >= 4));
+export function evidenceIsUseful(value: string) {
+  return words(value).length >= 4 && !genericEvidence.test(value.trim());
+}
+export function evidenceIsDistinct(a: string, b: string) {
+  const left = meaningfulWords(a), right = meaningfulWords(b);
+  if (!left.size || !right.size) return a.trim().toLocaleLowerCase('ru') !== b.trim().toLocaleLowerCase('ru');
+  const shared = [...left].filter(word => right.has(word)).length;
+  return shared / Math.min(left.size, right.size) < 0.8;
+}
+export function fallbackEvidence(profiles: Profile[]): Record<string, string> {
+  const selected: string[] = [];
+  const result: Record<string, string> = {};
+  for (const profile of profiles) {
+    const otherDescriptions = profiles.filter(p => p.id !== profile.id).map(p => meaningfulWords(p.description));
+    const options = evidenceOptions(profile.description).map((evidence, index) => {
+      const uniqueWords = [...meaningfulWords(evidence)].filter(word => otherDescriptions.every(set => !set.has(word))).length;
+      const score = Math.min(evidence.length, 180) + uniqueWords * 7
+        + (concreteEvidence.test(evidence) ? 80 : 0) + (/[0-9]/.test(evidence) ? 10 : 0);
+      return { evidence, index, score };
+    }).sort((a, b) => b.score - a.score || a.index - b.index);
+    const best = options.find(option => evidenceIsUseful(option.evidence) && selected.every(value => evidenceIsDistinct(value, option.evidence)))
+      || options.find(option => selected.every(value => evidenceIsDistinct(value, option.evidence)))
+      || options[0];
+    result[profile.id] = best.evidence;
+    selected.push(best.evidence);
+  }
+  return result;
+}
 export function validateExplanations(value: { cards: { id: string; evidence: string; aspect: Aspect }[] }, profiles: Profile[]) {
   if (value.cards.length !== profiles.length || new Set(value.cards.map(c => c.id)).size !== profiles.length) throw new Error('Wrong explanation IDs');
   for (const card of value.cards) {
     const p = profiles.find(p => p.id === card.id);
     if (!p || card.evidence.length < 15 || card.evidence.length > 260 || !p.description.includes(card.evidence)) throw new Error('Unverified evidence');
     if (!aspectSchema.safeParse(card.aspect).success) throw new Error('Invalid aspect');
+  }
+  if (value.cards.some(card => !evidenceIsUseful(card.evidence))
+    || value.cards.some((card, index) => value.cards.slice(index + 1).some(other => !evidenceIsDistinct(card.evidence, other.evidence)))) {
+    throw new Error('Generic or interchangeable evidence');
   }
   return value.cards;
 }
