@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "Frontend Responsive Design Standards": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-responsive-ui/SKILL.md",
+      "computedHash": "7b16cf170e7701494d246e48cfb968ed8ef11cd3ce83c99ed6b914b1ca302e07"
+    },
+    "frontend-design": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "0792809c51bd57c9621ce64d7d4b7a99cb6ebc2f154bb303140d22b8eca34685"
+    },
+    "llm-council": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/llm-council/SKILL.md",
+      "computedHash": "ac408ec68f72afce439aac6dc45d0f35394ef6b17bd08ce5f35843909eadb51c"
+    },
+    "markdown-url": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/markdown-url/SKILL.md",
+      "computedHash": "4ec19a7bf6c8e3f4889f4d13bd46f5d346984817e5029a2c4da305265bddbd99"
+    },
+    "openai-docs-skill": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/openai-docs-skill/SKILL.md",
+      "computedHash": "138791325eabe197483eee3ad3c346f9d54f5649e8bf2b4c7b5484c9cf6a8340"
+    },
+    "planner": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/planner/SKILL.md",
+      "computedHash": "ab1d97975dcf20cebe27960f1b0abd7e2db16fa31261aebe29342eca33076f91"
+    },
+    "read-github": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/read-github/SKILL.md",
+      "computedHash": "69fec578094366755728c3b14ddeff19a546fb0c107d0eba24365f12a5578454"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "9edb4e9ad51fdad1033c7b6225b8da490e6740699d4712e6d532a442bc8f0501"
+    },
+    "vercel-react-best-practices": {
+      "source": "am-will/codex-skills",
+      "sourceType": "github",
+      "skillPath": "skills/vercel-react-best-practices/SKILL.md",
+      "computedHash": "00659afe9249562bae6065c96145759b8cd3621b89aba6ef90c39ce53ec3a209"
+    }
+  }
+}
