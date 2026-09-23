@@ -1,6 +1,11 @@
 'use client';
 import { useRef, useState, type FormEvent } from 'react';
+import { Button, NumberInput, Select, Textarea } from '@mantine/core';
+import { DatePickerInput } from '@mantine/dates';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
 import type { Metadata, Query, Result } from '@/lib/types';
+dayjs.locale('ru');
 const initial: Query = { city: 'Алматы', date: '2026-10-15', format: 'корпоратив', category: 'Ведущий', budget: 1000000, wishes: '' };
 const demos = [
   { title: 'Корпоратив', note: 'Плотная категория', query: initial },
@@ -37,8 +42,13 @@ export default function Finder({ metadata }: { metadata: Metadata }) {
     } catch (e) { setError(e instanceof Error && e.name === 'TimeoutError' ? 'Сервис не ответил вовремя. Повторите запрос.' : e instanceof Error ? e.message : 'Проверьте соединение и повторите запрос.'); }
     finally { setLoading(false); currentRequest.current = false; }
   }
-  const fieldError = (name: string) => fields[name]?.length ? <span className="field-error" id={`${name}-error`}>{fields[name].join('. ')}</span> : null;
-  const select = (name: 'city' | 'category' | 'format', label: string, choices: string[]) => <label>{label}<select value={query[name]} onChange={e => set(name, e.target.value)} aria-invalid={!!fields[name]?.length}>{choices.map(v => <option key={v}>{v}</option>)}</select>{fieldError(name)}</label>;
+  const fieldError = (name: string) => fields[name]?.join('. ') || undefined;
+  const select = (name: 'city' | 'category' | 'format', label: string, choices: string[]) => <Select
+    className="form-control" label={label} data={choices} value={query[name]}
+    onChange={value => { if (value !== null) set(name, value); }}
+    error={fieldError(name)} required allowDeselect={false} disabled={loading}
+    comboboxProps={{ withinPortal: true }}
+  />;
   return <>
     <header className="header shell"><a className="wordmark" href="/" aria-label="Собрано — главная"><Flower />собрано<span className="brand-dot">.</span></a><span className="header-note">ЛЮДИ, КОТОРЫЕ СОЗДАЮТ СОБЫТИЯ</span><a className="about-link" href="#how">Как это работает <Arrow diagonal /></a></header>
     <main className="shell">
@@ -52,15 +62,39 @@ export default function Finder({ metadata }: { metadata: Metadata }) {
           <form onSubmit={submit}>
             <fieldset disabled={loading}><legend className="sr-only">Параметры мероприятия</legend>
               <div className="form-title"><h2>Что планируете?</h2><span>Все цены в ₸</span></div>
-              <div className="form-grid">{select('city', 'Город', metadata.cities)}<label>Дата мероприятия<input type="date" required min="2026-09-23" max="2026-12-31" value={query.date} onChange={e => set('date', e.target.value)} aria-invalid={!!fields.date?.length} />{fieldError('date')}</label></div>
+              <div className="form-grid">{select('city', 'Город', metadata.cities)}<DatePickerInput
+                className="form-control" label="Дата мероприятия" value={query.date || null}
+                onChange={value => set('date', value || '')} valueFormat="DD.MM.YYYY" locale="ru"
+                minDate="2026-09-23" maxDate="2026-12-31" dropdownType="modal"
+                error={fieldError('date')} required disabled={loading} clearable={false}
+              /></div>
               <p className="input-note">Календарь: 23 сентября — 31 декабря 2026</p>
               {select('format', 'Формат мероприятия', metadata.formats)}
               {select('category', 'Кого ищем', metadata.categories)}
-              <label>Бюджет на подрядчика<div className="money-input"><input type="number" required min="1" max="1000000000" step="1" value={Number.isNaN(query.budget) ? '' : query.budget} onChange={e => set('budget', e.target.valueAsNumber)} aria-invalid={!!fields.budget?.length} /><span>₸</span></div>{fieldError('budget')}</label>
+              <NumberInput className="form-control" label="Бюджет на подрядчика"
+                value={Number.isNaN(query.budget) ? '' : query.budget}
+                onChange={value => set('budget', value === '' ? NaN : Number(value))}
+                min={1} max={1000000000} step={1} allowDecimal={false} allowNegative={false}
+                thousandSeparator=" " suffix=" ₸" hideControls required disabled={loading}
+                error={fieldError('budget')}
+              />
               <p className="input-note">Сравниваем с ценой «от». Итоговую стоимость нужно уточнить.</p>
-              <details className="optional"><summary>Язык и длительность <span>необязательно</span></summary><div className="form-grid"><label>Язык<select value={query.language || ''} onChange={e => set('language', e.target.value || undefined)}><option value="">Любой</option>{metadata.languages.map(v => <option key={v}>{v}</option>)}</select>{fieldError('language')}</label><label>Длительность, ч<input type="number" min="0.5" max="24" step="0.5" placeholder="Любая" value={query.hours ?? ''} onChange={e => set('hours', e.target.value ? e.target.valueAsNumber : undefined)} />{fieldError('hours')}</label></div></details>
-              <label className="wishes-label">Что для вас важно?<span className="optional-label">Необязательно · учитываем по смыслу анкеты</span><textarea rows={3} maxLength={600} value={query.wishes} onChange={e => set('wishes', e.target.value)} placeholder="Например: спокойная подача, живое общение, без шумных конкурсов" />{fieldError('wishes')}</label>
-              <button className="submit" type="submit">{loading ? 'Подбираем ваших людей…' : 'Найти совпадения'}{loading ? <span className="spinner" /> : <Arrow />}</button>
+              <details className="optional"><summary>Язык и длительность <span>необязательно</span></summary><div className="form-grid">
+                <Select className="form-control" label="Язык" placeholder="Любой" data={metadata.languages}
+                  value={query.language || null} onChange={value => set('language', value || undefined)}
+                  clearable disabled={loading} error={fieldError('language')} comboboxProps={{ withinPortal: true }} />
+                <NumberInput className="form-control" label="Длительность, ч" placeholder="Любая"
+                  value={query.hours ?? ''} onChange={value => set('hours', value === '' ? undefined : Number(value))}
+                  min={0.5} max={24} step={0.5} decimalScale={1} hideControls disabled={loading}
+                  error={fieldError('hours')} />
+              </div></details>
+              <Textarea className="form-control" label="Что для вас важно?"
+                description="Необязательно · учитываем по смыслу анкеты" rows={3} maxLength={600}
+                value={query.wishes} onChange={event => set('wishes', event.currentTarget.value)}
+                placeholder="Например: спокойная подача, живое общение, без шумных конкурсов"
+                disabled={loading} error={fieldError('wishes')} autosize minRows={3} maxRows={6} />
+              <Button className="submit" type="submit" loading={loading} disabled={loading}
+                rightSection={loading ? null : <Arrow />}>{loading ? 'Подбираем ваших людей…' : 'Найти совпадения'}</Button>
               <p className="form-footnote">Только рекомендации. Без заявок и бронирования.</p>
             </fieldset>
             {error && <div role="alert" className="error-box">{error}</div>}

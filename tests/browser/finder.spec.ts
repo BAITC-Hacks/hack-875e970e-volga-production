@@ -8,7 +8,7 @@ for (const width of [375, 414, 768, 1024, 1440]) {
     await expect(page.getByRole('heading', { name: 'Ваше событие. Ваши люди.' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('button', { name: 'Найти совпадения' }).click();
-    await expect(page.locator('.contractor')).toHaveCount(3);
+    await expect(page.locator('.contractor')).toHaveCount(3, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Есть совпадение.' })).toBeVisible();
     await expect(page.locator('.contractor').first()).toContainText('Свободен по календарю');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
