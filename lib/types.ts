@@ -18,5 +18,7 @@ export type Result = {
   excluded: Record<Reason, number>; message: string;
   ranking: 'semantic' | 'price' | 'none';
   explanationMode: 'ai' | 'facts' | 'none'; warnings: string[];
+  answer?: string; answerMode?: 'ai' | 'fallback';
 };
+export type ChatReply = { answer: string; answerMode: 'ai' | 'fallback' };
 export type Metadata = { cities: string[]; categories: string[]; formats: string[]; languages: string[]; total: number };
