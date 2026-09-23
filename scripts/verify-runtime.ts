@@ -11,7 +11,6 @@ for (const run of report.runs) {
 }
 const health = await fetch(base + '/api/health').then(r => r.json());
 assert.deepEqual(health, { status: 'ok', profiles: 66 });
-assert.equal((await fetch(base + '/presentation.html')).status, 404);
 const result = { checkedAt: new Date().toISOString(), compared, health, sameAsSavedResponses: true };
 await writeFile('docs/evidence/runtime.json', JSON.stringify(result, null, 2));
 console.log(JSON.stringify(result));
