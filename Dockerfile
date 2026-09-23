@@ -15,7 +15,7 @@ RUN mkdir -p /app/.cache/sobrano && chown -R node:node /app
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node ["/app/hackathon dataset anonymized .csv", "./hackathon dataset anonymized .csv"]
+COPY --from=builder --chown=node:node /app/data/hackathon_dataset_anonymized.csv ./data/hackathon_dataset_anonymized.csv
 USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

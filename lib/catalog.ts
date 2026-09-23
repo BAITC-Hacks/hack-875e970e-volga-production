@@ -6,7 +6,7 @@ import type { Profile, Metadata } from './types';
 
 export const MIN_DATE = '2026-09-23';
 export const MAX_DATE = '2026-12-31';
-const file = 'hackathon dataset anonymized .csv';
+const file = 'data/hackathon_dataset_anonymized.csv';
 const list = z.string().transform(s => s.split('|').map(v => v.trim()).filter(Boolean));
 const flag = z.enum(['True', 'False']).transform(s => s === 'True');
 const schema = z.object({
