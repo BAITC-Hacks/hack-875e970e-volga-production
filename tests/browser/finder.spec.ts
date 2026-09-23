@@ -9,7 +9,7 @@ for (const width of [375, 414, 768, 1024, 1440]) {
     await expect(page.getByRole('heading', { name: 'Ваше событие. Ваши люди.' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('button', { name: 'Найти совпадения' }).click();
-    await expect(page.locator('.contractor')).toHaveCount(3, { timeout: 35000 });
+    await expect(page.locator('.contractor')).toHaveCount(3, { timeout: 15000 });
     await expect(page.getByRole('heading', { name: 'Есть совпадение.' })).toBeVisible();
     await expect(page.locator('.contractor').first()).toContainText('Свободен по календарю');
     await expect(page.locator('.contractor-lead')).toHaveCount(1);
@@ -54,7 +54,7 @@ test('network error and retry preserve form, loading blocks duplicate requests',
   await page.goto('/');
   await page.route('**/api/recommendations', route => route.abort('failed'));
   await page.getByRole('button', { name: 'Найти совпадения' }).click();
-  await expect(page.locator('.error-box')).toContainText('Проверьте соединение и повторите запрос.');
+  await expect(page.locator('.error-box[role="alert"]')).toContainText('Проверьте соединение и повторите запрос.');
   await expect(page.getByRole('combobox', { name: 'Город', exact: true })).toHaveValue('Алматы');
   await page.unroute('**/api/recommendations');
   await page.getByRole('button', { name: 'Найти совпадения' }).click();
@@ -100,4 +100,22 @@ test('cards appear while the separate opening comparison is still pending', asyn
   await expect(page.locator('.contractor')).toHaveCount(3, { timeout: 12000 });
   await expect(page.locator('.assistant-answer')).toContainText('Готовим краткое сравнение');
   await expect(page.locator('.assistant-answer')).toContainText('Первый ведущий ближе к запросу');
+});
+
+test('sparse band remains visible with an honest explanation and full source', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('combobox', { name: 'Кого ищем', exact: true }).click();
+  await page.getByRole('option', { name: 'Лайв-бэнд', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Бюджет на подрядчика' }).fill('2000000');
+  await page.getByRole('button', { name: 'Найти совпадения' }).click();
+  await expect(page.locator('.contractor')).toHaveCount(3, { timeout: 15000 });
+  const sparse = page.locator('.contractor').filter({ has: page.locator('.source', { hasText: 'HK-25279' }) });
+  await expect(sparse).toHaveCount(1);
+  await expect(sparse.locator('.explanation')).toContainText('не удалось выделить конкретную отличительную особенность');
+  await expect(sparse.locator('.explanation')).not.toContainText('сверкаем');
+  await sparse.locator('.source summary').click();
+  await expect(sparse.locator('.source')).toContainText('Ниже — полная анкета');
+  await expect(sparse.locator('.source')).toContainText('сверкаем');
+  await expect(sparse.locator('blockquote')).toHaveCount(0);
+  await expect(page.locator('.contractor').filter({ has: page.locator('blockquote') })).toHaveCount(2);
 });

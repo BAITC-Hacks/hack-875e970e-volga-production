@@ -1,8 +1,4 @@
 import type { Profile, Query, Reason } from './types';
-export const reasonLabels: Record<Reason, string> = {
-  busy: 'заняты на выбранную дату', budget: 'начальная цена выше бюджета',
-  format: 'не берут этот формат', language: 'нет выбранного языка', hours: 'недостаточная длительность',
-};
 export function filterProfiles(profiles: Profile[], q: Query) {
   const base = profiles.filter(p => p.city === q.city && p.categories.includes(q.category));
   const excluded: Record<Reason, number> = { busy: 0, budget: 0, format: 0, language: 0, hours: 0 };

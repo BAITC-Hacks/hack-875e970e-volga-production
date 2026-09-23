@@ -3,7 +3,7 @@ import { hash, once, readCache, writeCache } from './cache';
 import { checks, dateLabel, filterProfiles, money, priceOrder } from './filter';
 import { embeddingModel, explain, fallbackEvidence, semanticScores, textModel, validateExplanations } from './ai';
 import type { Profile, Query, Result } from './types';
-const ALGORITHM = 'sobrano-v4-distinct-evidence';
+const ALGORITHM = 'sobrano-v5-concrete-evidence-or-gap';
 export type Services = {
   scores: typeof semanticScores; explanations: typeof explain;
 };
@@ -33,25 +33,30 @@ export async function computeResult(q: Query, profiles: Profile[], services: Ser
     result.warnings.push('Смысловой подбор недоступен: порядок по начальной цене. Пожелания не учтены при ранжировании.');
   }
   const selected = sorted.slice(0, 3);
-  let explanations: Awaited<ReturnType<typeof explain>> = [];
-  try {
-    if (signal.aborted) throw new Error('Deadline');
-    explanations = validateExplanations({ cards: await services.explanations(selected, q, signal) }, selected);
-    result.explanationMode = 'ai';
-  } catch {
-    result.explanationMode = 'facts';
-    result.warnings.push('AI-объяснения недоступны или не прошли проверку: показываем проверенные условия и разные цитаты из анкет.');
-  }
   const fallback = fallbackEvidence(selected);
+  const explainable = selected.filter(p => fallback[p.id]);
+  let explanations: Awaited<ReturnType<typeof explain>> = [];
+  result.explanationMode = 'facts';
+  if (explainable.length) {
+    try {
+      if (signal.aborted) throw new Error('Deadline');
+      explanations = validateExplanations({ cards: await services.explanations(explainable, q, signal) }, explainable);
+      result.explanationMode = 'ai';
+    } catch {
+      result.warnings.push('AI-объяснения недоступны или не прошли проверку: показываем проверенные условия и доступные конкретные цитаты из анкет.');
+    }
+  }
   result.cards = selected.map(p => {
     const { busy_dates: _calendar, ...profile } = p;
     void _calendar;
     const explanation = explanations.find(e => e.id === p.id);
     const evidence = explanation?.evidence || fallback[p.id];
     const aspectLabels = { style: 'Стиль работы', experience: 'Релевантный опыт', service: 'Особенность услуги', setting: 'Особенность площадки', language: 'Языки работы' };
-    const detail = explanation ? `${aspectLabels[explanation.aspect]} по анкете: «${evidence}»` : `В анкете: «${evidence}»`;
+    const detail = evidence
+      ? explanation ? `${aspectLabels[explanation.aspect]} по анкете: «${evidence}»` : `В анкете: «${evidence}»`
+      : 'В анкете не удалось выделить конкретную отличительную особенность; уточните детали услуги у подрядчика.';
     const first = `По календарю свободен на ${dateLabel(q.date)}, берёт формат «${q.format}», цена от ${money(p.price_from_kzt)} при бюджете ${money(q.budget)}.`;
-    return { ...profile, checks: checks(p, q), evidence,
+    return { ...profile, checks: checks(p, q), evidence, evidenceStatus: evidence ? 'specific' : 'insufficient',
       explanation: `${first} ${detail}` };
   });
   if (q.wishes) result.warnings.push('Пожелания учитываются по смысловой близости, но не гарантируются анкетой. Детали нужно уточнить у подрядчика.');

@@ -24,6 +24,7 @@ const sessionSchema = z.object({
       price_imputed: z.boolean(), event_formats: z.array(z.string()), languages: z.array(z.string()),
       max_hours: z.number().nullable(), description: z.string(), explanation: z.string(),
       evidence: z.string(), checks: z.array(z.string()),
+      evidenceStatus: z.enum(['specific', 'insufficient']).default('specific'),
     })),
     total: z.number(), eligible: z.number(),
     excluded: z.object({ busy: z.number(), budget: z.number(), format: z.number(), language: z.number(), hours: z.number() }),

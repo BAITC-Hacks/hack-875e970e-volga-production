@@ -11,6 +11,7 @@ export type Query = {
 export type Reason = 'busy' | 'budget' | 'format' | 'language' | 'hours';
 export type Card = Omit<Profile, 'busy_dates'> & {
   explanation: string; evidence: string; checks: string[];
+  evidenceStatus: 'specific' | 'insufficient';
 };
 export type Result = {
   status: 'matched' | 'category_absent' | 'no_match';

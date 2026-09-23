@@ -1,0 +1,14 @@
+.env
+.env.*
+.git
+.railway
+.agents
+.codex
+node_modules
+.next
+.cache
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+.DS_Store
